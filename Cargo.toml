@@ -1,0 +1,27 @@
+[workspace]
+members = ["rust/*"]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+description = "Math teacher"
+authors = ["Krystian Krakowski <kkrakowski22@gmail.com>"]
+readme = "README.md"
+rust-version = "1.93"
+
+[workspace.dependencies]
+tonic = { version = "=0.14.3" }
+prost = { version = "=0.14.3" }
+tonic-prost = { version = "=0.14.3" }
+tonic-prost-build = { version = "=0.14.3" }
+tokio = { version = "=1.49.0", features = ["full"] }
+log = { version = "=0.4.29" }
+env_logger = { version = "=0.11.9" }
+clap = { version = "=4.5.60", features = ["derive"] }
+chrono = { version = "=0.4.43" }
+
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+unwrap_used = "deny"

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package teacher;
+
+message Numbers {
+    int32 Num1 = 1;
+    int32 Num2 = 2;
+}
+
+message Result {
+    int64 result = 1;
+}
+
+service Calculator {
+    rpc Mul(Numbers) returns (Result);
+    rpc Add(Numbers) returns (Result);
+    rpc Sub(Numbers) returns (Result);
+}

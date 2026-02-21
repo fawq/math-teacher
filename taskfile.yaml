@@ -1,0 +1,31 @@
+version: "3"
+
+vars:
+  HOST: "[::1]"
+  PORT: "50051"
+
+env:
+  PYO3_PYTHON: '{{if eq OS "windows"}}{{.USER_WORKING_DIR}}\\.venv\\Scripts\\python.exe{{else}}.venv/bin/python{{end}}'
+
+tasks:
+  generate:
+    desc: Generate gRPC code
+    cmds:
+      - uv run -m grpc_tools.protoc --proto_path=./protos --python_out=./python/client/src/client --pyi_out=./python/client/src/client --grpc_python_out=./python/client/src/client ./protos/teacher.proto
+      - sed -i 's/^\(import.*_pb2\)/from . \1/' python/client/src/client/teacher_pb2_grpc.py
+      - cargo build --release
+  python-client:
+    desc: Run Python gRPC client
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+      OPERATION: "{{.OPERATION | default \"Add\"}}"
+      NUM1: "{{.NUMS | default \"5 3\"}}"
+    cmds:
+      - task: generate
+      - uv run -m client --host {{.HOST}} --port {{.PORT}} --operation {{.OPERATION}} --numbers {{.NUMS}}
+  rust-server:
+    desc: Run Rust gRPC server
+    cmds:
+      - task: generate
+      - cargo run --release --bin server -- --host {{.HOST}} --port {{.PORT}}

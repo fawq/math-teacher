@@ -1,0 +1,17 @@
+[project]
+name = "client"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Krystian Krakowski", email = "kkrakowski22@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+client = "client:client"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

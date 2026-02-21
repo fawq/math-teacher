@@ -1,0 +1,62 @@
+# ──────────────────────────────
+# Default behavior for all text files
+# ──────────────────────────────
+* text=auto eol=lf
+
+# ──────────────────────────────
+# Python source and config
+# ──────────────────────────────
+*.py  text eol=lf
+*.pyi text eol=lf
+*.toml text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+
+# ──────────────────────────────
+# Rust source
+# ──────────────────────────────
+*.rs  text eol=lf
+Cargo.lock text eol=lf
+Cargo.toml text eol=lf
+
+# ──────────────────────────────
+# Shell / scripts
+# ──────────────────────────────
+*.sh  text eol=lf
+*.ps1 text eol=crlf  # PowerShell on Windows often prefers CRLF
+*.bat text eol=crlf  # Windows batch scripts
+
+# ──────────────────────────────
+# Docs and metadata
+# ──────────────────────────────
+*.md  text eol=lf
+*.txt text eol=lf
+*.rst text eol=lf
+
+# ──────────────────────────────
+# Binary files (no EOL normalization)
+# ──────────────────────────────
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.exe binary
+*.dll binary
+*.pyd binary
+*.so binary
+
+# ──────────────────────────────
+# Optional: OS or IDE files
+# ──────────────────────────────
+*.sln text eol=crlf
+*.vcxproj text eol=crlf
+*.csproj text eol=crlf
+.idea/** -text
+.vscode/** -text

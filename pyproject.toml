@@ -1,0 +1,56 @@
+[project]
+name = "math-teacher"
+version = "0.1.0"
+description = "Math teacher"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [{name = "Krystian Krakowski", email = "kkrakowski22@gmail.com"}]
+dependencies = [
+    "grpcio==1.78.1",
+    "client"
+]
+
+[dependency-groups]
+dev = [
+    "mypy==1.19.1",
+    "pytest==9.0.2",
+    "ruff==0.14.14",
+    "pyright==1.1.408",
+    "grpcio-tools==1.78.1",
+    "types-protobuf==6.32.1.20260221",
+    "types-grpcio==1.0.0.20251009",
+]
+
+[tool.uv.workspace]
+members = ["python/*"]
+
+[tool.uv.sources]
+client = { workspace = true }
+
+[tool.ruff]
+extend-exclude = ["**/*.pyi", "**/*_pb2.py", "**/*_pb2_grpc.py"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D100",
+    "D103",
+    "D104",
+    "D203",
+    "D212",
+    "COM812",
+    "PLR2004",
+    "PYI034",
+    "S101",
+    "T201",
+    "ICN001",
+    "PYI029",
+    "RUF100"
+]
+
+[tool.pyright]
+pythonVersion = "3.13"
+reportMissingModuleSource = false
+
+[tool.mypy]
+exclude = ".*(_pb2|_pb2_grpc)\\.pyi?$"
