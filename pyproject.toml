@@ -51,6 +51,7 @@ ignore = [
 [tool.pyright]
 pythonVersion = "3.13"
 reportMissingModuleSource = false
+exclude = ["**/*_pb2.py", "**/*_pb2_grpc.py", "**/node_modules", "**/__pycache__", "**/.*", ".venv"]
 
 [tool.mypy]
 exclude = ".*(_pb2|_pb2_grpc)\\.pyi?$"

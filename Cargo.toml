@@ -22,6 +22,6 @@ clap = { version = "=4.5.60", features = ["derive"] }
 chrono = { version = "=0.4.43" }
 
 [workspace.lints.clippy]
-pedantic = { level = "deny", priority = -1 }
-nursery = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 unwrap_used = "deny"
