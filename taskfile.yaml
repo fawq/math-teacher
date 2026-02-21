@@ -3,6 +3,7 @@ version: "3"
 vars:
   HOST: "[::1]"
   PORT: "50051"
+  SERVER_LIFETIME: "10"
 
 env:
   PYO3_PYTHON: '{{if eq OS "windows"}}{{.USER_WORKING_DIR}}\\.venv\\Scripts\\python.exe{{else}}.venv/bin/python{{end}}'
@@ -43,30 +44,53 @@ tasks:
 
   python-client:
     desc: Run Python gRPC client
-    sources:
-      - protos/**
-      - python/**
-      - pyproject.toml
     vars:
       HOST: "{{.HOST}}"
       PORT: "{{.PORT}}"
       OPERATION: "{{.OPERATION | default \"Add\"}}"
-      NUM1: "{{.NUMS | default \"5 3\"}}"
+      NUMS: "{{.NUMS | default \"5 3\"}}"
     cmds:
-      - task: generate
-      - task: python-checks
       - uv run -m client --host {{.HOST}} --port {{.PORT}} --operation {{.OPERATION}} --numbers {{.NUMS}}
   
   rust-server:
     desc: Run Rust gRPC server
-    sources:
-      - protos/**
-      - Cargo.toml
-      - rust/**
     vars:
       HOST: "{{.HOST}}"
       PORT: "{{.PORT}}"
     cmds:
-      - task: generate
-      - task: rust-checks
       - cargo run --release --bin server -- --host {{.HOST}} --port {{.PORT}}
+
+  rust-server-bg:
+    desc: Run Rust gRPC server in the background
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+    cmds:
+      - cargo run --release --bin server -- --host {{.HOST}} --port {{.PORT}} &
+  
+  rust-server-sleep:
+    desc: Run Rust gRPC server for a limited time
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+    cmds:
+      - task: rust-server-bg
+      - sleep {{.SERVER_LIFETIME}}
+      - pkill -f target/release/server
+
+  test-multirun:
+    desc: Run both server and client for testing
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+      OPERATION: "{{.OPERATION | default \"Add\"}}"
+      NUMS: "{{.NUMS | default \"5 3\"}}"
+    cmds:
+      - task: rust-server-bg
+      - sleep 1
+      - |
+        for i in {1..300}; do
+          task python-client &
+        done
+        sleep 20
+      - pkill -f target/release/server

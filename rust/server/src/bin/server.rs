@@ -27,9 +27,12 @@ impl Calculator for MyCalculator {
             .unwrap_or_else(|| "unknown".parse().expect("Failed to parse address"))
             .to_string();
         let r = request.into_inner();
-        info!("Adding [{}] {} and {}", remote_addr, r.num1, r.num2);
+        info!(
+            "Received adding [{}] {} and {}",
+            remote_addr, r.num1, r.num2
+        );
         let result = i64::from(r.num1) + i64::from(r.num2);
-        info!("Result of addition [{remote_addr}]: {result}");
+        info!("Send result of addition [{remote_addr}]: {result}");
         Ok(Response::new(grpc_pb::Result { result }))
     }
 
@@ -42,9 +45,12 @@ impl Calculator for MyCalculator {
             .unwrap_or_else(|| "unknown".parse().expect("Failed to parse address"))
             .to_string();
         let r = request.into_inner();
-        info!("Subtracting [{}] {} and {}", remote_addr, r.num1, r.num2);
+        info!(
+            "Received subtracting [{}] {} and {}",
+            remote_addr, r.num1, r.num2
+        );
         let result = i64::from(r.num1) - i64::from(r.num2);
-        info!("Result of subtraction [{remote_addr}]: {result}");
+        info!("Send result of subtraction [{remote_addr}]: {result}");
         Ok(Response::new(grpc_pb::Result { result }))
     }
 
@@ -57,9 +63,12 @@ impl Calculator for MyCalculator {
             .unwrap_or_else(|| "unknown".parse().expect("Failed to get address"))
             .to_string();
         let r = request.into_inner();
-        info!("Multiplying [{}] {} and {}", remote_addr, r.num1, r.num2);
+        info!(
+            "Received multiplying [{}] {} and {}",
+            remote_addr, r.num1, r.num2
+        );
         let result = i64::from(r.num1) * i64::from(r.num2);
-        info!("Result of multiplication [{remote_addr}]: {result}");
+        info!("Send result of multiplication [{remote_addr}]: {result}");
         Ok(Response::new(grpc_pb::Result { result }))
     }
 }
@@ -88,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .target(Target::Pipe(Box::new(file)))
         .filter_level(log::LevelFilter::Info)
         .format(|buf, record| {
-            let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+            let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S,%3f");
 
             writeln!(
                 buf,

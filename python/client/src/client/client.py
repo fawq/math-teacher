@@ -33,7 +33,8 @@ def main() -> int:
     )
     args = argparser.parse_args()
 
-    channel = grpc.insecure_channel(f"{args.host}:{args.port}")
+    server_target = f"{args.host}:{args.port}"
+    channel = grpc.insecure_channel(server_target)
     stub = CalculatorStub(channel)
     number_1 = (
         args.numbers[0]
@@ -53,15 +54,17 @@ def main() -> int:
     )
     logger = logging.getLogger(__name__)
 
+    logger.info("Connecting to server %s", server_target)
+
     try:
         if args.operation == "Mul":
-            logger.info("Multiplying %d and %d", number_1, number_2)
+            logger.info("Send multiplying %d and %d", number_1, number_2)
             response = stub.Mul(Numbers(Num1=number_1, Num2=number_2))
         elif args.operation == "Add":
-            logger.info("Adding %d and %d", number_1, number_2)
+            logger.info("Send adding %d and %d", number_1, number_2)
             response = stub.Add(Numbers(Num1=number_1, Num2=number_2))
         elif args.operation == "Sub":
-            logger.info("Subtracting %d and %d", number_1, number_2)
+            logger.info("Send subtracting %d and %d", number_1, number_2)
             response = stub.Sub(Numbers(Num1=number_1, Num2=number_2))
         else:
             msg = "Unknown operation: %s"
@@ -71,7 +74,7 @@ def main() -> int:
         logger.exception("gRPC error: %s - %s", e.code(), e.details())
         return 1
 
-    logger.info("Result: %s", response.result)
+    logger.info("Received result: %s", response.result)
     return 0
 
 
