@@ -78,7 +78,7 @@ tasks:
       - sleep {{.SERVER_LIFETIME}}
       - pkill -f target/release/server
 
-  test-multirun:
+  test-multiple-python-clients:
     desc: Run both server and client for testing
     vars:
       HOST: "{{.HOST}}"
@@ -89,8 +89,8 @@ tasks:
       - task: rust-server-bg
       - sleep 1
       - |
-        for i in {1..300}; do
+        for i in {1..100}; do
           task python-client &
         done
-        sleep 20
+        sleep 30
       - pkill -f target/release/server

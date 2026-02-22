@@ -4,7 +4,7 @@ mod grpc_pb {
     tonic::include_proto!("teacher");
 }
 
-use std::fs::OpenOptions;
+use std::{fs::OpenOptions, io, sync::Mutex};
 
 use clap::Parser;
 use env_logger::{Builder, Target};
@@ -12,6 +12,63 @@ use grpc_pb::calculator_server::{Calculator, CalculatorServer};
 use log::info;
 use std::io::Write;
 use tonic::{Request, Response, Status, transport::Server};
+
+struct MultiWriter {
+    file: Mutex<std::fs::File>,
+}
+
+impl Write for MultiWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.file
+            .lock()
+            .expect("Cannot write to file")
+            .write_all(buf)?;
+        io::stderr().write_all(buf)?;
+
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.file.lock().expect("Cannot flush file").flush()?;
+        io::stderr().flush()
+    }
+}
+
+fn set_logger() {
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("server.log")
+        .expect("Failed to open log file");
+
+    let writer = MultiWriter {
+        file: Mutex::new(file),
+    };
+
+    Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .format(|buf, record| {
+            let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S,%3f");
+
+            writeln!(
+                buf,
+                "{} - {} - {} - {}",
+                ts,
+                record.module_path().unwrap_or_else(|| record.target()),
+                record.level(),
+                record.args()
+            )
+        })
+        .target(Target::Pipe(Box::new(writer)))
+        .init();
+}
+
+fn get_remote_addr(request: &Request<grpc_pb::Numbers>) -> String {
+    request
+        .remote_addr()
+        .unwrap_or_else(|| "unknown".parse().expect("Failed to parse address"))
+        .to_string()
+}
 
 #[derive(Default)]
 struct MyCalculator;
@@ -22,10 +79,7 @@ impl Calculator for MyCalculator {
         &self,
         request: Request<grpc_pb::Numbers>,
     ) -> Result<Response<grpc_pb::Result>, Status> {
-        let remote_addr = request
-            .remote_addr()
-            .unwrap_or_else(|| "unknown".parse().expect("Failed to parse address"))
-            .to_string();
+        let remote_addr = get_remote_addr(&request);
         let r = request.into_inner();
         info!(
             "Received adding [{}] {} and {}",
@@ -40,10 +94,7 @@ impl Calculator for MyCalculator {
         &self,
         request: Request<grpc_pb::Numbers>,
     ) -> Result<Response<grpc_pb::Result>, Status> {
-        let remote_addr = request
-            .remote_addr()
-            .unwrap_or_else(|| "unknown".parse().expect("Failed to parse address"))
-            .to_string();
+        let remote_addr = get_remote_addr(&request);
         let r = request.into_inner();
         info!(
             "Received subtracting [{}] {} and {}",
@@ -58,10 +109,7 @@ impl Calculator for MyCalculator {
         &self,
         request: Request<grpc_pb::Numbers>,
     ) -> Result<Response<grpc_pb::Result>, Status> {
-        let remote_addr = request
-            .remote_addr()
-            .unwrap_or_else(|| "unknown".parse().expect("Failed to get address"))
-            .to_string();
+        let remote_addr = get_remote_addr(&request);
         let r = request.into_inner();
         info!(
             "Received multiplying [{}] {} and {}",
@@ -88,34 +136,11 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("server.log")
-        .expect("Failed to open log file");
-    Builder::new()
-        .target(Target::Pipe(Box::new(file)))
-        .filter_level(log::LevelFilter::Info)
-        .format(|buf, record| {
-            let ts = chrono::Local::now().format("%Y-%m-%d %H:%M:%S,%3f");
-
-            writeln!(
-                buf,
-                "{} - {} - {} - {}",
-                ts,
-                record.module_path().unwrap_or_else(|| record.target()),
-                record.level(),
-                record.args()
-            )
-        })
-        .init();
+    set_logger();
 
     info!("Starting server on {}:{}", args.host, args.port);
-
     let addr = format!("{}:{}", args.host, args.port).parse()?;
-
     let svc = CalculatorServer::new(MyCalculator);
-
     Server::builder().add_service(svc).serve(addr).await?;
 
     Ok(())
