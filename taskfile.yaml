@@ -51,6 +51,17 @@ tasks:
       NUMS: "{{.NUMS | default \"5 3\"}}"
     cmds:
       - uv run -m client --host {{.HOST}} --port {{.PORT}} --operation {{.OPERATION}} --numbers {{.NUMS}}
+
+  python-client-iterative:
+    desc: Run Python gRPC client for multiple iterations
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+      OPERATION: "{{.OPERATION | default \"Add\"}}"
+      NUMS: "{{.NUMS | default \"5 3\"}}"
+      ITERATIONS: "{{.ITERATIONS | default \"10000\"}}"
+    cmds:
+      - uv run -m client --host {{.HOST}} --port {{.PORT}} --operation {{.OPERATION}} --numbers {{.NUMS}} --iterations {{.ITERATIONS}}
   
   rust-server:
     desc: Run Rust gRPC server
@@ -93,4 +104,18 @@ tasks:
           task python-client &
         done
         sleep 30
+      - pkill -f target/release/server
+
+  test-python-client-iterative:
+    desc: Run iterative client test
+    vars:
+      HOST: "{{.HOST}}"
+      PORT: "{{.PORT}}"
+      OPERATION: "{{.OPERATION | default \"Add\"}}"
+      NUMS: "{{.NUMS | default \"5 3\"}}"
+      ITERATIONS: "{{.ITERATIONS | default \"10\"}}"
+    cmds:
+      - task: rust-server-bg
+      - sleep 1
+      - task: python-client-iterative
       - pkill -f target/release/server

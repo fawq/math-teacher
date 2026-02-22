@@ -31,6 +31,12 @@ def argument_parser() -> argparse.Namespace:
         nargs=2,
         help="two numbers to perform the operation on (default: random)",
     )
+    argparser.add_argument(
+        "--iterations",
+        type=int,
+        default=1,
+        help="number of iterations to perform (default: 1)",
+    )
     return argparser.parse_args()
 
 
@@ -51,6 +57,19 @@ def wait_for_server(channel: grpc.Channel, timeout: float = 20.0) -> bool:
         return False
     else:
         return True
+
+
+def get_response(
+    stub: CalculatorStub, operation: str, number_1: int, number_2: int
+) -> Result:
+    if operation == "Mul":
+        return stub.Mul(Numbers(Num1=number_1, Num2=number_2))
+    if operation == "Add":
+        return stub.Add(Numbers(Num1=number_1, Num2=number_2))
+    if operation == "Sub":
+        return stub.Sub(Numbers(Num1=number_1, Num2=number_2))
+    msg = f"Unknown operation: {operation}"
+    raise ValueError(msg)
 
 
 def main() -> int:
@@ -77,28 +96,15 @@ def main() -> int:
     )
 
     try:
-        response: Result | None = None
-        if args.operation == "Mul":
-            logger.info("Send multiplying %d and %d", number_1, number_2)
-            response = stub.Mul(Numbers(Num1=number_1, Num2=number_2))
-        elif args.operation == "Add":
-            logger.info("Send adding %d and %d", number_1, number_2)
-            response = stub.Add(Numbers(Num1=number_1, Num2=number_2))
-        elif args.operation == "Sub":
-            logger.info("Send subtracting %d and %d", number_1, number_2)
-            response = stub.Sub(Numbers(Num1=number_1, Num2=number_2))
-        else:
-            msg = "Unknown operation: %s"
-            logger.error(msg, args.operation)
-            return 1
+        for _ in range(args.iterations):
+            response = get_response(stub, args.operation, number_1, number_2)
+            logger.info("Received result: %s", response.result)
     except grpc.RpcError as e:
         logger.exception("gRPC error: %s - %s", e.code(), e.details())
         return 1
-
-    if not response:
-        logger.error("No response from server")
+    except Exception:
+        logger.exception("Unexpected error occurred")
         return 1
-    logger.info("Received result: %s", response.result)
     return 0
 
 
